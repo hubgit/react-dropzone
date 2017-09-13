@@ -2,11 +2,12 @@ import React from 'react'
 import Dropzone from './Dropzone'
 import { supportMultiple, allFilesAccepted } from './utils'
 
-const makeDropzone = WrappedComponent =>
+const makeDropzone = options => WrappedComponent =>
   class extends Dropzone {
     buildComponentProps = () => {
       const { multiple } = this.props
       const { acceptedFiles, draggedFiles, rejectedFiles, isDragActive } = this.state
+
       const filesCount = draggedFiles.length
       const isMultipleAllowed = multiple || filesCount <= 1
       const isDragAccept = filesCount > 0 && allFilesAccepted(draggedFiles, this.props.accept)
@@ -22,10 +23,10 @@ const makeDropzone = WrappedComponent =>
       }
     }
 
-    render() {
-      const { accept, disabled, inputProps, multiple, name } = this.props
+    buildInputProps = () => {
+      const { accept, disabled, multiple, name } = this.props
 
-      const inputAttributes = {
+      const props = {
         accept,
         disabled,
         type: 'file',
@@ -37,25 +38,27 @@ const makeDropzone = WrappedComponent =>
       }
 
       if (name && name.length) {
-        inputAttributes.name = name
+        props.name = name
       }
 
+      return props
+    }
+
+    buildHandlers = () => {
+      if (this.props.disabled) return {}
+
+      const { onClick, onDragStart, onDragEnter, onDragOver, onDragLeave, onDrop } = this
+
+      return { onClick, onDragStart, onDragEnter, onDragOver, onDragLeave, onDrop }
+    }
+
+    render() {
+      const { disabled } = this.props
+
       return (
-        <div
-          onClick={this.composeHandlers(this.onClick)}
-          onDragStart={this.composeHandlers(this.onDragStart)}
-          onDragEnter={this.composeHandlers(this.onDragEnter)}
-          onDragOver={this.composeHandlers(this.onDragOver)}
-          onDragLeave={this.composeHandlers(this.onDragLeave)}
-          onDrop={this.composeHandlers(this.onDrop)}
-          ref={this.setRef}
-          aria-disabled={disabled}
-        >
-          <WrappedComponent {...this.buildComponentProps()} />
-          <input
-            {...inputProps /* expand user provided inputProps first so inputAttributes override them */}
-            {...inputAttributes}
-          />
+        <div {...this.buildHandlers()} ref={this.setRef} aria-disabled={disabled}>
+          <WrappedComponent {...this.props} {...this.buildComponentProps()} />
+          <input {...options.inputProps} {...this.buildInputProps()} />
         </div>
       )
     }
