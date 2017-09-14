@@ -300,7 +300,7 @@ class Dropzone extends React.Component {
       ...props // eslint-disable-line prefer-const
     } = rest
 
-    const { isDragActive, draggedFiles } = this.state
+    const { isDragActive, draggedFiles, acceptedFiles, rejectedFiles } = this.state
     const filesCount = draggedFiles.length
     const isMultipleAllowed = multiple || filesCount <= 1
     const isDragAccept = filesCount > 0 && allFilesAccepted(draggedFiles, this.props.accept)
@@ -369,6 +369,22 @@ class Dropzone extends React.Component {
 
     if (name && name.length) {
       inputAttributes.name = name
+    }
+
+    if (this.props.render) {
+      return (
+        <div>
+          {this.props.render({
+            isDragActive,
+            isDragAccept,
+            isDragReject,
+            draggedFiles,
+            acceptedFiles,
+            rejectedFiles
+          })}
+          <input {...inputProps} {...inputAttributes} />
+        </div>
+      )
     }
 
     // Remove custom properties before passing them to the wrapper div element
@@ -566,7 +582,9 @@ Dropzone.propTypes = {
   /**
    * Provide a callback on clicking the cancel button of the file dialog
    */
-  onFileDialogCancel: PropTypes.func
+  onFileDialogCancel: PropTypes.func,
+
+  render: PropTypes.func
 }
 
 Dropzone.defaultProps = {
